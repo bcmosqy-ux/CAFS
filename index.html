@@ -6,855 +6,812 @@
 <title>CAFS – Community Appointment & Feedback System</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  /* ── Design tokens ── */
-  :root {
-    --ink: #0f1923;
-    --paper: #f5f2ed;
-    --cream: #ede9e2;
-    --accent: #1a6b4a;
-    --accent-light: #e8f3ee;
-    --accent-mid: #2d9e70;
-    --warm: #c05c2a;
-    --warm-light: #fdf0e8;
-    --border: #d4cfc7;
-    --muted: #7a7369;
-    --white: #ffffff;
-    --shadow: 0 2px 16px rgba(15,25,35,0.08);
-    --shadow-lg: 0 8px 40px rgba(15,25,35,0.14);
-    --r: 12px;
-    --r-sm: 8px;
-  }
+:root {
+  --ink:#0f1923; --paper:#f5f2ed; --cream:#ede9e2;
+  --green:#1a6b4a; --green-l:#e8f3ee; --green-m:#2d9e70;
+  --warm:#c05c2a; --warm-l:#fdf0e8;
+  --red:#c0392b; --red-l:#fdecea;
+  --border:#d4cfc7; --muted:#7a7369; --white:#ffffff;
+  --shadow:0 2px 16px rgba(15,25,35,0.08);
+  --shadow-lg:0 8px 40px rgba(15,25,35,0.16);
+  --r:12px; --r-sm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;font-size:15px;line-height:1.6}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+/* ── Auth overlay ── */
+#auth-overlay{position:fixed;inset:0;background:var(--ink);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem}
+#auth-overlay.hidden{display:none}
+.auth-card{background:var(--paper);border-radius:20px;padding:2.5rem;width:100%;max-width:420px;box-shadow:var(--shadow-lg)}
+.auth-logo{font-family:'DM Serif Display',serif;font-size:1.8rem;color:var(--green);margin-bottom:0.25rem;display:flex;align-items:center;gap:8px}
+.auth-logo-dot{width:10px;height:10px;background:var(--green-m);border-radius:50%;display:inline-block}
+.auth-subtitle{color:var(--muted);font-size:0.9rem;margin-bottom:1.75rem}
+.auth-tabs{display:flex;gap:4px;margin-bottom:1.5rem;background:var(--cream);padding:4px;border-radius:var(--r-sm)}
+.auth-tab{flex:1;padding:8px;border:none;background:none;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:0.875rem;font-weight:500;color:var(--muted);cursor:pointer;transition:all .2s}
+.auth-tab.active{background:var(--white);color:var(--ink);box-shadow:var(--shadow)}
+.auth-field{margin-bottom:1rem}
+.auth-field label{display:block;font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:5px}
+.auth-field input,.auth-field select{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:'DM Sans',sans-serif;font-size:0.9rem;background:var(--white);color:var(--ink);outline:none;transition:all .2s}
+.auth-field input:focus,.auth-field select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(26,107,74,0.12)}
+.auth-btn{width:100%;padding:12px;border:none;border-radius:var(--r-sm);background:var(--green);color:var(--white);font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:600;cursor:pointer;transition:all .2s;margin-top:0.5rem}
+.auth-btn:hover{background:#155c3f;transform:translateY(-1px);box-shadow:0 4px 16px rgba(26,107,74,0.3)}
+.auth-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.auth-error{background:var(--red-l);color:var(--red);border:1px solid #f5c6c3;border-radius:var(--r-sm);padding:10px 14px;font-size:0.875rem;margin-bottom:1rem;display:none}
+.auth-error.show{display:block}
+.auth-success{background:var(--green-l);color:var(--green);border:1px solid #b8dece;border-radius:var(--r-sm);padding:10px 14px;font-size:0.875rem;margin-bottom:1rem;display:none}
+.auth-success.show{display:block}
+.password-wrap{position:relative}
+.password-wrap input{padding-right:44px}
+.password-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);font-size:0.85rem;padding:4px}
+.password-strength{height:4px;border-radius:2px;margin-top:6px;transition:all .3s}
+.role-info{background:var(--green-l);border:1px solid #b8dece;border-radius:var(--r-sm);padding:10px 14px;font-size:0.82rem;color:var(--green);margin-top:0.5rem;display:none}
 
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--paper);
-    color: var(--ink);
-    min-height: 100vh;
-    font-size: 15px;
-    line-height: 1.6;
-  }
+/* ── Main app ── */
+#app{display:none}
+#app.show{display:block}
+header{background:var(--ink);color:var(--paper);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,0.3)}
+.logo{font-family:'DM Serif Display',serif;font-size:1.4rem;display:flex;align-items:center;gap:10px}
+.logo-dot{width:10px;height:10px;background:var(--green-m);border-radius:50%;display:inline-block}
+.header-right{display:flex;align-items:center;gap:12px}
+nav{display:flex;gap:4px}
+nav button{background:none;border:none;color:rgba(245,242,237,0.65);font-family:'DM Sans',sans-serif;font-size:0.875rem;font-weight:500;padding:8px 16px;border-radius:8px;cursor:pointer;transition:all .2s}
+nav button:hover{color:var(--paper);background:rgba(255,255,255,0.08)}
+nav button.active{background:var(--green);color:var(--white)}
+nav button.admin-only{background:rgba(192,92,42,0.2);color:#f4a800}
+.user-pill{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.08);border-radius:100px;padding:6px 14px;font-size:0.82rem;color:var(--paper)}
+.user-avatar{width:26px;height:26px;border-radius:50%;background:var(--green-m);display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:white}
+.role-badge{font-size:0.65rem;background:var(--warm);color:white;padding:2px 6px;border-radius:100px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em}
+.logout-btn{background:none;border:1px solid rgba(255,255,255,0.2);color:rgba(245,242,237,0.7);border-radius:8px;padding:6px 12px;font-size:0.8rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+.logout-btn:hover{background:rgba(192,57,43,0.3);border-color:#c0392b;color:white}
 
-  /* ── Header ── */
-  header {
-    background: var(--ink);
-    color: var(--paper);
-    padding: 0 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 64px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
-  }
-  .logo {
-    font-family: 'DM Serif Display', serif;
-    font-size: 1.4rem;
-    letter-spacing: -0.02em;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .logo-dot {
-    width: 10px; height: 10px;
-    background: var(--accent-mid);
-    border-radius: 50%;
-    display: inline-block;
-  }
-  nav { display: flex; gap: 4px; }
-  nav button {
-    background: none;
-    border: none;
-    color: rgba(245,242,237,0.65);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.875rem;
-    font-weight: 500;
-    padding: 8px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all .2s;
-    letter-spacing: 0.01em;
-  }
-  nav button:hover { color: var(--paper); background: rgba(255,255,255,0.08); }
-  nav button.active { background: var(--accent); color: var(--white); }
+main{max-width:960px;margin:0 auto;padding:2.5rem 1.5rem 4rem}
+.panel{display:none}
+.panel.active{display:block}
 
-  /* ── Main layout ── */
-  main { max-width: 960px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+/* ── Hero ── */
+.hero{background:var(--ink);color:var(--paper);border-radius:20px;padding:3rem;margin-bottom:2rem;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;right:-60px;top:-60px;width:280px;height:280px;background:radial-gradient(circle,rgba(45,158,112,0.3) 0%,transparent 70%);border-radius:50%}
+.hero h1{font-family:'DM Serif Display',serif;font-size:2.2rem;line-height:1.15;margin-bottom:0.75rem;position:relative}
+.hero h1 em{font-style:italic;color:var(--green-m)}
+.hero p{color:rgba(245,242,237,0.7);max-width:520px;font-size:1rem;position:relative}
+.stats-row{display:flex;gap:2rem;margin-top:2rem;position:relative}
+.stat strong{display:block;font-size:1.8rem;font-family:'DM Serif Display',serif;color:var(--green-m)}
+.stat span{font-size:0.8rem;color:rgba(245,242,237,0.55);text-transform:uppercase;letter-spacing:0.06em}
 
-  /* ── Hero ── */
-  .hero {
-    background: var(--ink);
-    color: var(--paper);
-    border-radius: 20px;
-    padding: 3rem;
-    margin-bottom: 2rem;
-    position: relative;
-    overflow: hidden;
-  }
-  .hero::before {
-    content: '';
-    position: absolute;
-    right: -60px; top: -60px;
-    width: 280px; height: 280px;
-    background: radial-gradient(circle, rgba(45,158,112,0.3) 0%, transparent 70%);
-    border-radius: 50%;
-  }
-  .hero h1 {
-    font-family: 'DM Serif Display', serif;
-    font-size: 2.4rem;
-    line-height: 1.15;
-    margin-bottom: 0.75rem;
-    position: relative;
-  }
-  .hero h1 em { font-style: italic; color: var(--accent-mid); }
-  .hero p {
-    color: rgba(245,242,237,0.7);
-    max-width: 520px;
-    font-size: 1rem;
-    position: relative;
-  }
-  .stats-row {
-    display: flex; gap: 2rem; margin-top: 2rem;
-    position: relative;
-  }
-  .stat { }
-  .stat strong {
-    display: block;
-    font-size: 1.8rem;
-    font-family: 'DM Serif Display', serif;
-    color: var(--accent-mid);
-  }
-  .stat span { font-size: 0.8rem; color: rgba(245,242,237,0.55); text-transform: uppercase; letter-spacing: 0.06em; }
+/* ── Cards ── */
+.card{background:var(--white);border-radius:var(--r);border:1px solid var(--border);padding:1.75rem;margin-bottom:1rem;box-shadow:var(--shadow)}
+.card-title{font-family:'DM Serif Display',serif;font-size:1.2rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:10px}
+.card-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.icon-green{background:var(--green-l)} .icon-warm{background:var(--warm-l)}
 
-  /* ── Tabs ── */
-  .tabs { display: flex; gap: 8px; margin-bottom: 1.5rem; flex-wrap: wrap; }
-  .tab {
-    padding: 8px 20px;
-    border-radius: 100px;
-    border: 1.5px solid var(--border);
-    background: var(--white);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--muted);
-    cursor: pointer;
-    transition: all .2s;
-  }
-  .tab:hover { border-color: var(--accent); color: var(--accent); }
-  .tab.active { background: var(--accent); border-color: var(--accent); color: var(--white); }
+/* ── Forms ── */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.form-full{grid-column:1/-1}
+label{display:block;font-size:0.8rem;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+input,select,textarea{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:'DM Sans',sans-serif;font-size:0.9rem;background:var(--paper);color:var(--ink);outline:none;transition:all .2s}
+input:focus,select:focus,textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(26,107,74,0.12);background:var(--white)}
+textarea{resize:vertical;min-height:90px}
 
-  /* ── Cards ── */
-  .card {
-    background: var(--white);
-    border-radius: var(--r);
-    border: 1px solid var(--border);
-    padding: 1.75rem;
-    margin-bottom: 1rem;
-    box-shadow: var(--shadow);
-  }
-  .card-title {
-    font-family: 'DM Serif Display', serif;
-    font-size: 1.2rem;
-    margin-bottom: 1.25rem;
-    color: var(--ink);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .card-icon {
-    width: 32px; height: 32px;
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 16px;
-  }
-  .icon-green { background: var(--accent-light); }
-  .icon-warm { background: var(--warm-light); }
+/* ── Buttons ── */
+.btn{padding:11px 24px;border-radius:var(--r-sm);border:none;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:600;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:7px}
+.btn-primary{background:var(--green);color:var(--white)}
+.btn-primary:hover{background:#155c3f;transform:translateY(-1px);box-shadow:0 4px 16px rgba(26,107,74,0.3)}
+.btn-secondary{background:var(--cream);color:var(--ink);border:1.5px solid var(--border)}
+.btn-secondary:hover{background:var(--border)}
+.btn-danger{background:#dc3545;color:white} .btn-danger:hover{background:#c82333}
+.btn-sm{padding:6px 14px;font-size:0.8rem}
+.btn:disabled{opacity:0.5;cursor:not-allowed;transform:none!important}
 
-  /* ── Forms ── */
-  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-  .form-full { grid-column: 1/-1; }
-  label {
-    display: block;
-    font-size: 0.8rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 6px;
-  }
-  input, select, textarea {
-    width: 100%;
-    padding: 10px 14px;
-    border: 1.5px solid var(--border);
-    border-radius: var(--r-sm);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.9rem;
-    background: var(--paper);
-    color: var(--ink);
-    outline: none;
-    transition: border-color .2s, box-shadow .2s;
-  }
-  input:focus, select:focus, textarea:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(26,107,74,0.12);
-    background: var(--white);
-  }
-  textarea { resize: vertical; min-height: 90px; }
+/* ── Service grid ── */
+.service-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1rem}
+.service-card{border:2px solid var(--border);border-radius:var(--r);padding:14px;text-align:center;cursor:pointer;transition:all .2s;background:var(--white)}
+.service-card:hover{border-color:var(--green);background:var(--green-l)}
+.service-card.selected{border-color:var(--green);background:var(--green-l)}
+.service-card .svc-icon{font-size:1.5rem;margin-bottom:4px}
+.service-card .svc-name{font-size:0.78rem;font-weight:600;color:var(--ink)}
 
-  /* ── Buttons ── */
-  .btn {
-    padding: 11px 24px;
-    border-radius: var(--r-sm);
-    border: none;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.9rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all .2s;
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-  }
-  .btn-primary {
-    background: var(--accent);
-    color: var(--white);
-  }
-  .btn-primary:hover { background: #155c3f; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(26,107,74,0.3); }
-  .btn-secondary {
-    background: var(--cream);
-    color: var(--ink);
-    border: 1.5px solid var(--border);
-  }
-  .btn-secondary:hover { background: var(--border); }
-  .btn-danger { background: #dc3545; color: white; }
-  .btn-danger:hover { background: #c82333; }
-  .btn-sm { padding: 6px 14px; font-size: 0.8rem; }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+/* ── Appointment list ── */
+.appt-list{display:flex;flex-direction:column;gap:12px}
+.appt-item{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem 1.5rem;display:flex;align-items:center;gap:1rem;transition:box-shadow .2s}
+.appt-item:hover{box-shadow:var(--shadow)}
+.appt-date-badge{background:var(--green-l);color:var(--green);border-radius:10px;padding:8px 14px;text-align:center;min-width:70px;flex-shrink:0}
+.appt-date-badge .day{font-size:1.4rem;font-family:'DM Serif Display',serif;line-height:1}
+.appt-date-badge .mon{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;font-weight:600}
+.appt-info{flex:1}
+.appt-name{font-weight:600;margin-bottom:2px}
+.appt-meta{font-size:0.82rem;color:var(--muted)}
+.appt-actions{display:flex;gap:6px;flex-wrap:wrap}
+.badge{display:inline-block;padding:3px 10px;border-radius:100px;font-size:0.72rem;font-weight:600;letter-spacing:0.04em;text-transform:uppercase}
+.badge-pending{background:#fff3cd;color:#856404}
+.badge-confirmed{background:var(--green-l);color:var(--green)}
+.badge-cancelled{background:#f8d7da;color:#842029}
 
-  /* ── Appointment list ── */
-  .appt-list { display: flex; flex-direction: column; gap: 12px; }
-  .appt-item {
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: var(--r);
-    padding: 1.25rem 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    transition: box-shadow .2s;
-  }
-  .appt-item:hover { box-shadow: var(--shadow); }
-  .appt-date-badge {
-    background: var(--accent-light);
-    color: var(--accent);
-    border-radius: 10px;
-    padding: 8px 14px;
-    text-align: center;
-    min-width: 70px;
-    flex-shrink: 0;
-  }
-  .appt-date-badge .day { font-size: 1.4rem; font-family: 'DM Serif Display', serif; line-height: 1; }
-  .appt-date-badge .mon { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
-  .appt-info { flex: 1; }
-  .appt-name { font-weight: 600; margin-bottom: 2px; }
-  .appt-meta { font-size: 0.82rem; color: var(--muted); }
-  .appt-actions { display: flex; gap: 6px; }
+/* ── Feedback ── */
+.star-rating{display:flex;gap:6px;margin-top:4px}
+.star{font-size:1.6rem;cursor:pointer;color:var(--border);transition:all .15s;user-select:none}
+.star.lit{color:#f4a800}
+.star:hover{transform:scale(1.2)}
+.feedback-item{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem 1.5rem;margin-bottom:10px}
+.feedback-header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:8px}
+.rating-stars{color:#f4a800;font-size:0.9rem}
 
-  /* ── Status badges ── */
-  .badge {
-    display: inline-block;
-    padding: 3px 10px;
-    border-radius: 100px;
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-  .badge-pending { background: #fff3cd; color: #856404; }
-  .badge-confirmed { background: var(--accent-light); color: var(--accent); }
-  .badge-cancelled { background: #f8d7da; color: #842029; }
+/* ── Security section ── */
+.security-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.security-item{background:var(--green-l);border:1px solid #b8dece;border-radius:var(--r-sm);padding:1rem}
+.security-item h4{font-size:0.875rem;font-weight:600;color:var(--green);margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.security-item p{font-size:0.82rem;color:var(--muted)}
+.permission-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.875rem}
+.permission-row:last-child{border:none}
+.perm-yes{color:var(--green);font-weight:600}
+.perm-no{color:var(--red);font-weight:600}
 
-  /* ── Star rating ── */
-  .star-rating { display: flex; gap: 6px; margin-top: 4px; }
-  .star {
-    font-size: 1.6rem;
-    cursor: pointer;
-    color: var(--border);
-    transition: color .15s, transform .1s;
-    user-select: none;
-  }
-  .star.lit { color: #f4a800; }
-  .star:hover { transform: scale(1.2); }
+/* ── Admin panel ── */
+.admin-warning{background:var(--warm-l);border:1px solid #e8c4a0;border-radius:var(--r-sm);padding:12px 16px;font-size:0.875rem;color:var(--warm);margin-bottom:1rem}
 
-  /* ── Feedback list ── */
-  .feedback-item {
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: var(--r);
-    padding: 1.25rem 1.5rem;
-    margin-bottom: 10px;
-  }
-  .feedback-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 8px;
-  }
-  .feedback-meta { font-size: 0.8rem; color: var(--muted); }
-  .rating-stars { color: #f4a800; font-size: 0.9rem; letter-spacing: 1px; }
+/* ── Toast ── */
+#toast{position:fixed;bottom:2rem;right:2rem;background:var(--ink);color:var(--paper);padding:14px 20px;border-radius:var(--r-sm);font-size:0.875rem;font-weight:500;box-shadow:var(--shadow-lg);transform:translateY(20px);opacity:0;transition:all .3s;z-index:9999;max-width:320px}
+#toast.show{transform:translateY(0);opacity:1}
+#toast.success{border-left:4px solid var(--green-m)}
+#toast.error{border-left:4px solid var(--warm)}
 
-  /* ── Toast ── */
-  #toast {
-    position: fixed;
-    bottom: 2rem; right: 2rem;
-    background: var(--ink);
-    color: var(--paper);
-    padding: 14px 20px;
-    border-radius: var(--r-sm);
-    font-size: 0.875rem;
-    font-weight: 500;
-    box-shadow: var(--shadow-lg);
-    transform: translateY(20px);
-    opacity: 0;
-    transition: all .3s;
-    z-index: 9999;
-    max-width: 320px;
-  }
-  #toast.show { transform: translateY(0); opacity: 1; }
-  #toast.success { border-left: 4px solid var(--accent-mid); }
-  #toast.error { border-left: 4px solid var(--warm); }
+.empty{text-align:center;padding:3rem 1rem;color:var(--muted)}
+.empty .icon{font-size:2.5rem;margin-bottom:0.75rem}
 
-  /* ── Empty state ── */
-  .empty {
-    text-align: center;
-    padding: 3rem 1rem;
-    color: var(--muted);
-  }
-  .empty .icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
-  .empty p { font-size: 0.9rem; }
-
-  /* ── Section panels ── */
-  .panel { display: none; }
-  .panel.active { display: block; }
-
-  /* ── Service select visual ── */
-  .service-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1rem; }
-  .service-card {
-    border: 2px solid var(--border);
-    border-radius: var(--r);
-    padding: 14px;
-    text-align: center;
-    cursor: pointer;
-    transition: all .2s;
-    background: var(--white);
-  }
-  .service-card:hover { border-color: var(--accent); background: var(--accent-light); }
-  .service-card.selected { border-color: var(--accent); background: var(--accent-light); }
-  .service-card .svc-icon { font-size: 1.5rem; margin-bottom: 4px; }
-  .service-card .svc-name { font-size: 0.78rem; font-weight: 600; color: var(--ink); }
-
-  @media (max-width: 640px) {
-    .form-grid { grid-template-columns: 1fr; }
-    .service-grid { grid-template-columns: repeat(2, 1fr); }
-    .hero h1 { font-size: 1.8rem; }
-    .hero { padding: 2rem; }
-    .stats-row { gap: 1.2rem; }
-    header { padding: 0 1rem; }
-    .logo { font-size: 1.1rem; }
-  }
+@media(max-width:640px){.form-grid,.security-grid{grid-template-columns:1fr}.service-grid{grid-template-columns:repeat(2,1fr)}.hero h1{font-size:1.8rem}.hero{padding:2rem}.stats-row{gap:1.2rem}header{padding:0 1rem}.logo{font-size:1.1rem}nav button{padding:6px 10px;font-size:0.8rem}}
 </style>
 </head>
 <body>
 
-<header>
-  <div class="logo">
-    <span class="logo-dot"></span>
-    CAFS
-  </div>
-  <nav>
-    <button class="active" onclick="showPanel('dashboard')">Dashboard</button>
-    <button onclick="showPanel('book')">Book</button>
-    <button onclick="showPanel('my-appointments')">My Appointments</button>
-    <button onclick="showPanel('feedback')">Feedback</button>
-  </nav>
-</header>
+<!-- ══ AUTH OVERLAY ══════════════════════════════════════════════════════════ -->
+<div id="auth-overlay">
+  <div class="auth-card">
+    <div class="auth-logo"><span class="auth-logo-dot"></span> CAFS</div>
+    <p class="auth-subtitle">Community Appointment & Feedback System</p>
 
-<main>
-
-  <!-- DASHBOARD -->
-  <div class="panel active" id="panel-dashboard">
-    <div class="hero">
-      <h1>Your community,<br><em>better connected.</em></h1>
-      <p>Book appointments with local services and share feedback to help improve your community experience.</p>
-      <div class="stats-row">
-        <div class="stat">
-          <strong id="stat-total">—</strong>
-          <span>Total Bookings</span>
-        </div>
-        <div class="stat">
-          <strong id="stat-pending">—</strong>
-          <span>Pending</span>
-        </div>
-        <div class="stat">
-          <strong id="stat-feedback">—</strong>
-          <span>Feedback Received</span>
-        </div>
-        <div class="stat">
-          <strong id="stat-rating">—</strong>
-          <span>Avg. Rating</span>
-        </div>
-      </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">Sign In</button>
+      <button class="auth-tab" onclick="switchAuthTab('register')">Create Account</button>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;" class="dash-grid">
-      <div class="card">
-        <div class="card-title">
-          <div class="card-icon icon-green">📅</div>
-          Upcoming Appointments
-        </div>
-        <div id="dash-upcoming"></div>
+    <div id="auth-error" class="auth-error"></div>
+    <div id="auth-success" class="auth-success"></div>
+
+    <!-- LOGIN FORM -->
+    <div id="login-form">
+      <div class="auth-field">
+        <label>Email Address</label>
+        <input id="l-email" type="email" placeholder="your@email.com" autocomplete="email">
       </div>
-      <div class="card">
-        <div class="card-title">
-          <div class="card-icon icon-warm">💬</div>
-          Recent Feedback
+      <div class="auth-field">
+        <label>Password</label>
+        <div class="password-wrap">
+          <input id="l-password" type="password" placeholder="Your password" autocomplete="current-password">
+          <button class="password-toggle" onclick="togglePwd('l-password', this)" type="button">Show</button>
         </div>
-        <div id="dash-feedback"></div>
       </div>
+      <button class="auth-btn" id="login-btn" onclick="doLogin()">Sign In →</button>
+      <p style="text-align:center;margin-top:1rem;font-size:0.82rem;color:var(--muted)">
+        Demo: user@cafs.com / User1234! &nbsp;|&nbsp; admin@cafs.com / Admin1234!
+      </p>
     </div>
-  </div>
 
-  <!-- BOOK APPOINTMENT -->
-  <div class="panel" id="panel-book">
-    <div class="card">
-      <div class="card-title">
-        <div class="card-icon icon-green">📅</div>
-        Book an Appointment
+    <!-- REGISTER FORM -->
+    <div id="register-form" style="display:none">
+      <div class="auth-field">
+        <label>Full Name</label>
+        <input id="r-name" type="text" placeholder="Jane Smith" autocomplete="name">
       </div>
-
-      <div class="form-grid">
-        <div class="form-full">
-          <label>Select a Service</label>
-          <div class="service-grid" id="service-grid">
-            <div class="service-card" data-service="GP Consultation" onclick="selectService(this)">
-              <div class="svc-icon">🩺</div>
-              <div class="svc-name">GP Consultation</div>
-            </div>
-            <div class="service-card" data-service="Library Booking" onclick="selectService(this)">
-              <div class="svc-icon">📚</div>
-              <div class="svc-name">Library Booking</div>
-            </div>
-            <div class="service-card" data-service="Council Advice" onclick="selectService(this)">
-              <div class="svc-icon">🏛️</div>
-              <div class="svc-name">Council Advice</div>
-            </div>
-            <div class="service-card" data-service="Housing Support" onclick="selectService(this)">
-              <div class="svc-icon">🏠</div>
-              <div class="svc-name">Housing Support</div>
-            </div>
-            <div class="service-card" data-service="Job Centre" onclick="selectService(this)">
-              <div class="svc-icon">💼</div>
-              <div class="svc-name">Job Centre</div>
-            </div>
-            <div class="service-card" data-service="Community Hub" onclick="selectService(this)">
-              <div class="svc-icon">🤝</div>
-              <div class="svc-name">Community Hub</div>
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <label for="b-name">Full Name</label>
-          <input id="b-name" type="text" placeholder="e.g. Jane Smith">
-        </div>
-        <div>
-          <label for="b-email">Email</label>
-          <input id="b-email" type="email" placeholder="jane@example.com">
-        </div>
-        <div>
-          <label for="b-date">Preferred Date</label>
-          <input id="b-date" type="date">
-        </div>
-        <div>
-          <label for="b-time">Preferred Time</label>
-          <select id="b-time">
-            <option value="">Select time…</option>
-            <option>09:00</option><option>09:30</option>
-            <option>10:00</option><option>10:30</option>
-            <option>11:00</option><option>11:30</option>
-            <option>13:00</option><option>13:30</option>
-            <option>14:00</option><option>14:30</option>
-            <option>15:00</option><option>15:30</option>
-            <option>16:00</option>
-          </select>
-        </div>
-        <div class="form-full">
-          <label for="b-notes">Additional Notes (optional)</label>
-          <textarea id="b-notes" placeholder="Any details the service provider should know…"></textarea>
-        </div>
+      <div class="auth-field">
+        <label>Email Address</label>
+        <input id="r-email" type="email" placeholder="your@email.com" autocomplete="email">
       </div>
-
-      <div style="margin-top:1.25rem; display:flex; gap:10px;">
-        <button class="btn btn-primary" id="book-btn" onclick="bookAppointment()">
-          ✓ Confirm Booking
-        </button>
-        <button class="btn btn-secondary" onclick="clearBookingForm()">Clear</button>
+      <div class="auth-field">
+        <label>Password</label>
+        <div class="password-wrap">
+          <input id="r-password" type="password" placeholder="Min 8 chars, uppercase, number, symbol" oninput="checkStrength(this.value)" autocomplete="new-password">
+          <button class="password-toggle" onclick="togglePwd('r-password', this)" type="button">Show</button>
+        </div>
+        <div class="password-strength" id="pwd-strength"></div>
+        <p id="pwd-hint" style="font-size:0.75rem;color:var(--muted);margin-top:3px"></p>
       </div>
-    </div>
-  </div>
-
-  <!-- MY APPOINTMENTS -->
-  <div class="panel" id="panel-my-appointments">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:10px;">
-      <h2 style="font-family:'DM Serif Display',serif;font-size:1.5rem;">All Appointments</h2>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <select id="filter-status" onchange="loadAppointments()" style="width:auto;padding:8px 14px;font-size:0.85rem;">
-          <option value="">All Statuses</option>
-          <option value="PENDING">Pending</option>
-          <option value="CONFIRMED">Confirmed</option>
-          <option value="CANCELLED">Cancelled</option>
+      <div class="auth-field">
+        <label>Account Role</label>
+        <select id="r-role" onchange="onRoleChange(this.value)">
+          <option value="USER">Community Member</option>
+          <option value="ADMIN">Service Administrator</option>
         </select>
-        <button class="btn btn-secondary btn-sm" onclick="loadAppointments()">↻ Refresh</button>
       </div>
-    </div>
-    <div class="appt-list" id="appt-list">
-      <div class="empty"><div class="icon">📅</div><p>No appointments yet.</p></div>
+      <div id="admin-invite-wrap" class="auth-field" style="display:none">
+        <label>Admin Invite Code</label>
+        <input id="r-invite" type="text" placeholder="CAFS-ADMIN-2026">
+        <div class="role-info" style="display:block">Admin accounts can confirm/cancel any appointment and moderate feedback.</div>
+      </div>
+      <button class="auth-btn" id="register-btn" onclick="doRegister()">Create Account →</button>
     </div>
   </div>
+</div>
 
-  <!-- FEEDBACK -->
-  <div class="panel" id="panel-feedback">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start;">
+<!-- ══ MAIN APP ══════════════════════════════════════════════════════════════ -->
+<div id="app">
+  <header>
+    <div class="logo"><span class="logo-dot"></span>CAFS</div>
+    <nav>
+      <button class="active" onclick="showPanel('dashboard', this)">Dashboard</button>
+      <button onclick="showPanel('book', this)">Book</button>
+      <button onclick="showPanel('my-appointments', this)">My Appointments</button>
+      <button onclick="showPanel('feedback', this)">Feedback</button>
+      <button id="admin-nav-btn" class="admin-only" onclick="showPanel('admin', this)" style="display:none">⚙ Admin</button>
+    </nav>
+    <div class="header-right">
+      <div class="user-pill">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <span id="user-name-header">...</span>
+        <span class="role-badge" id="role-badge-header">USER</span>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- DASHBOARD -->
+    <div class="panel active" id="panel-dashboard">
+      <div class="hero">
+        <h1>Your community,<br><em>better connected.</em></h1>
+        <p>Book appointments with local services and share feedback to help improve your community experience.</p>
+        <div class="stats-row">
+          <div class="stat"><strong id="stat-total">—</strong><span>Total Bookings</span></div>
+          <div class="stat"><strong id="stat-pending">—</strong><span>Pending</span></div>
+          <div class="stat"><strong id="stat-feedback">—</strong><span>Feedback</span></div>
+          <div class="stat"><strong id="stat-rating">—</strong><span>Avg. Rating</span></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div class="card">
+          <div class="card-title"><div class="card-icon icon-green">📅</div>Upcoming Appointments</div>
+          <div id="dash-upcoming"></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><div class="card-icon icon-warm">💬</div>Recent Feedback</div>
+          <div id="dash-feedback-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOOK -->
+    <div class="panel" id="panel-book">
       <div class="card">
-        <div class="card-title">
-          <div class="card-icon icon-warm">✍️</div>
-          Submit Feedback
-        </div>
-        <div style="margin-bottom:1rem;">
-          <label>Category</label>
-          <select id="f-category">
-            <option value="GENERAL">General</option>
-            <option value="FACILITY">Facility</option>
-            <option value="STAFF">Staff</option>
-            <option value="APPOINTMENT">Appointment</option>
-            <option value="SUGGESTION">Suggestion</option>
-          </select>
-        </div>
-        <div style="margin-bottom:1rem;">
-          <label>Your Name (leave blank to submit anonymously)</label>
-          <input id="f-name" type="text" placeholder="Optional">
-        </div>
-        <div style="margin-bottom:1rem;">
-          <label>Email (optional)</label>
-          <input id="f-email" type="email" placeholder="Optional">
-        </div>
-        <div style="margin-bottom:1rem;">
-          <label>Rating</label>
-          <div class="star-rating" id="star-rating">
-            <span class="star" data-v="1" onclick="setRating(1)">★</span>
-            <span class="star" data-v="2" onclick="setRating(2)">★</span>
-            <span class="star" data-v="3" onclick="setRating(3)">★</span>
-            <span class="star" data-v="4" onclick="setRating(4)">★</span>
-            <span class="star" data-v="5" onclick="setRating(5)">★</span>
+        <div class="card-title"><div class="card-icon icon-green">📅</div>Book an Appointment</div>
+        <div class="form-grid">
+          <div class="form-full">
+            <label>Select a Service</label>
+            <div class="service-grid">
+              <div class="service-card" data-service="GP Consultation" onclick="selectService(this)"><div class="svc-icon">🩺</div><div class="svc-name">GP Consultation</div></div>
+              <div class="service-card" data-service="Library Booking" onclick="selectService(this)"><div class="svc-icon">📚</div><div class="svc-name">Library Booking</div></div>
+              <div class="service-card" data-service="Council Advice" onclick="selectService(this)"><div class="svc-icon">🏛️</div><div class="svc-name">Council Advice</div></div>
+              <div class="service-card" data-service="Housing Support" onclick="selectService(this)"><div class="svc-icon">🏠</div><div class="svc-name">Housing Support</div></div>
+              <div class="service-card" data-service="Job Centre" onclick="selectService(this)"><div class="svc-icon">💼</div><div class="svc-name">Job Centre</div></div>
+              <div class="service-card" data-service="Community Hub" onclick="selectService(this)"><div class="svc-icon">🤝</div><div class="svc-name">Community Hub</div></div>
+            </div>
           </div>
+          <div><label for="b-date">Preferred Date</label><input id="b-date" type="date"></div>
+          <div><label for="b-time">Preferred Time</label>
+            <select id="b-time">
+              <option value="">Select time…</option>
+              <option>09:00</option><option>09:30</option><option>10:00</option><option>10:30</option>
+              <option>11:00</option><option>11:30</option><option>13:00</option><option>13:30</option>
+              <option>14:00</option><option>14:30</option><option>15:00</option><option>15:30</option>
+            </select>
+          </div>
+          <div class="form-full"><label for="b-notes">Additional Notes (optional)</label><textarea id="b-notes" placeholder="Any details the service provider should know…"></textarea></div>
         </div>
-        <div style="margin-bottom:1.25rem;">
-          <label>Your Feedback *</label>
-          <textarea id="f-message" placeholder="Tell us about your experience…"></textarea>
-        </div>
-        <button class="btn btn-primary" onclick="submitFeedback()">Submit Feedback →</button>
-      </div>
-
-      <div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
-          <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;">Community Feedback</h3>
-          <button class="btn btn-secondary btn-sm" onclick="loadFeedback()">↻</button>
-        </div>
-        <div id="feedback-list">
-          <div class="empty"><div class="icon">💬</div><p>No feedback yet.</p></div>
+        <div style="margin-top:1.25rem;display:flex;gap:10px">
+          <button class="btn btn-primary" id="book-btn" onclick="bookAppointment()">✓ Confirm Booking</button>
+          <button class="btn btn-secondary" onclick="clearBookingForm()">Clear</button>
         </div>
       </div>
     </div>
-  </div>
 
-</main>
+    <!-- MY APPOINTMENTS -->
+    <div class="panel" id="panel-my-appointments">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:10px">
+        <h2 style="font-family:'DM Serif Display',serif;font-size:1.5rem" id="appts-heading">My Appointments</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <select id="filter-status" onchange="loadAppointments()" style="width:auto;padding:8px 14px;font-size:0.85rem">
+            <option value="">All Statuses</option>
+            <option value="PENDING">Pending</option>
+            <option value="CONFIRMED">Confirmed</option>
+            <option value="CANCELLED">Cancelled</option>
+          </select>
+          <button class="btn btn-secondary btn-sm" onclick="loadAppointments()">↻ Refresh</button>
+        </div>
+      </div>
+      <div class="appt-list" id="appt-list"><div class="empty"><div class="icon">📅</div><p>No appointments yet.</p></div></div>
+    </div>
+
+    <!-- FEEDBACK -->
+    <div class="panel" id="panel-feedback">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start">
+        <div class="card">
+          <div class="card-title"><div class="card-icon icon-warm">✍️</div>Submit Feedback</div>
+          <div style="margin-bottom:1rem"><label>Category</label>
+            <select id="f-category"><option value="GENERAL">General</option><option value="FACILITY">Facility</option><option value="STAFF">Staff</option><option value="APPOINTMENT">Appointment</option><option value="SUGGESTION">Suggestion</option></select>
+          </div>
+          <div style="margin-bottom:1rem"><label>Rating</label>
+            <div class="star-rating" id="star-rating">
+              <span class="star" data-v="1" onclick="setRating(1)">★</span><span class="star" data-v="2" onclick="setRating(2)">★</span>
+              <span class="star" data-v="3" onclick="setRating(3)">★</span><span class="star" data-v="4" onclick="setRating(4)">★</span>
+              <span class="star" data-v="5" onclick="setRating(5)">★</span>
+            </div>
+          </div>
+          <div style="margin-bottom:1rem">
+            <label>Submit Anonymously?</label>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+              <input type="checkbox" id="f-anon" style="width:auto;padding:0" onchange="toggleAnon(this.checked)">
+              <span style="font-size:0.875rem;color:var(--muted)">Hide my name and email</span>
+            </div>
+          </div>
+          <div style="margin-bottom:1.25rem"><label for="f-message">Your Feedback *</label><textarea id="f-message" placeholder="Tell us about your experience…"></textarea></div>
+          <button class="btn btn-primary" onclick="submitFeedback()">Submit Feedback →</button>
+        </div>
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+            <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem">Community Feedback</h3>
+            <button class="btn btn-secondary btn-sm" onclick="loadFeedback()">↻</button>
+          </div>
+          <div id="feedback-list"><div class="empty"><div class="icon">💬</div><p>No feedback yet.</p></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADMIN PANEL -->
+    <div class="panel" id="panel-admin">
+      <div class="admin-warning">⚠️ Admin Panel — actions here affect all users. Confirm/cancel appointments on behalf of community members.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+        <div class="card">
+          <div class="card-title"><div class="card-icon icon-green">📊</div>All Appointments</div>
+          <div class="appt-list" id="admin-appt-list"><div class="empty"><p>Loading…</p></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><div class="card-icon icon-warm">🔒</div>Security &amp; Permissions</div>
+          <div class="security-grid" style="margin-bottom:1rem">
+            <div class="security-item"><h4>🔐 Cognito Auth</h4><p>JWT tokens verified on every API request via Lambda Authorizer</p></div>
+            <div class="security-item"><h4>👥 Role-Based Access</h4><p>USER: own data only. ADMIN: full read/write access to all records</p></div>
+            <div class="security-item"><h4>🔒 Data Encryption</h4><p>DynamoDB SSE (KMS) + S3 AES-256 + TLS in transit on all routes</p></div>
+            <div class="security-item"><h4>🛡️ IAM Least Privilege</h4><p>Lambda role scoped to specific table ARNs only — no wildcard permissions</p></div>
+          </div>
+          <h4 style="font-size:0.875rem;font-weight:600;margin-bottom:0.5rem">Role Permission Matrix</h4>
+          <div class="permission-row"><span>Book appointment</span><span class="perm-yes">USER + ADMIN ✓</span></div>
+          <div class="permission-row"><span>View own appointments</span><span class="perm-yes">USER + ADMIN ✓</span></div>
+          <div class="permission-row"><span>View ALL appointments</span><span class="perm-yes">ADMIN only ✓</span></div>
+          <div class="permission-row"><span>Confirm/cancel any appointment</span><span class="perm-yes">ADMIN only ✓</span></div>
+          <div class="permission-row"><span>Submit feedback</span><span class="perm-yes">USER + ADMIN ✓</span></div>
+          <div class="permission-row"><span>Moderate/delete feedback</span><span class="perm-yes">ADMIN only ✓</span></div>
+          <div class="permission-row"><span>Access admin panel</span><span class="perm-yes">ADMIN only ✓</span></div>
+          <div class="permission-row"><span>Delete users</span><span class="perm-no">Not implemented ✗</span></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
 
 <div id="toast"></div>
 
 <script>
-  // ── API Configuration ──────────────────────────────────────────────────
-  // Replace with your deployed API Gateway URL after CloudFormation deploy
-  const API_BASE = 'https://sz2518aw2e.execute-api.eu-west-1.amazonaws.com/prod';
+// ── Config ────────────────────────────────────────────────────────────────────
+const API_BASE = 'https://sz2518aw2e.execute-api.eu-west-1.amazonaws.com/prod';
+const DEMO = true; // Set false when Cognito is wired up
 
-  // ── In-memory demo store (replaces API calls in demo mode) ─────────────
-  const DEMO = true;  // Set to false when backend is deployed
-  let demoAppointments = [];
-  let demoFeedback = [];
-  let selectedService = '';
-  let selectedRating = 0;
+// ── Demo user store ───────────────────────────────────────────────────────────
+const DEMO_USERS = {
+  'user@cafs.com':  { password:'User1234!', name:'Alice Johnson', role:'USER'  },
+  'admin@cafs.com': { password:'Admin1234!', name:'Admin User',   role:'ADMIN' },
+};
+let currentUser   = null;
+let authToken     = null;
+let selectedService = '';
+let selectedRating  = 0;
+let demoAppointments = [];
+let demoFeedback     = [];
 
-  // ── Navigation ──────────────────────────────────────────────────────────
-  function showPanel(name) {
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-    document.getElementById('panel-' + name).classList.add('active');
-    event.target.classList.add('active');
+// ── Auth UI helpers ───────────────────────────────────────────────────────────
+function switchAuthTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', i===(tab==='login'?0:1)));
+  document.getElementById('login-form').style.display    = tab==='login'    ? '' : 'none';
+  document.getElementById('register-form').style.display = tab==='register' ? '' : 'none';
+  clearAuthMessages();
+}
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg; el.classList.add('show');
+  document.getElementById('auth-success').classList.remove('show');
+}
+function showAuthSuccess(msg) {
+  const el = document.getElementById('auth-success');
+  el.textContent = msg; el.classList.add('show');
+  document.getElementById('auth-error').classList.remove('show');
+}
+function clearAuthMessages() {
+  document.getElementById('auth-error').classList.remove('show');
+  document.getElementById('auth-success').classList.remove('show');
+}
+function togglePwd(id, btn) {
+  const inp = document.getElementById(id);
+  if (inp.type==='password') { inp.type='text'; btn.textContent='Hide'; }
+  else { inp.type='password'; btn.textContent='Show'; }
+}
+function onRoleChange(val) {
+  document.getElementById('admin-invite-wrap').style.display = val==='ADMIN' ? '' : 'none';
+}
+function checkStrength(pwd) {
+  let score = 0;
+  const hints = [];
+  if (pwd.length >= 8) score++; else hints.push('8+ chars');
+  if (/[A-Z]/.test(pwd)) score++; else hints.push('uppercase');
+  if (/[0-9]/.test(pwd)) score++; else hints.push('number');
+  if (/[^A-Za-z0-9]/.test(pwd)) score++; else hints.push('symbol');
+  const bar = document.getElementById('pwd-strength');
+  const hint = document.getElementById('pwd-hint');
+  const colors = ['#e74c3c','#e67e22','#f1c40f','#2d9e70'];
+  bar.style.width = (score*25)+'%'; bar.style.background = colors[score-1]||'#e5e3de';
+  hint.textContent = hints.length ? 'Need: '+hints.join(', ') : '✓ Strong password';
+}
 
-    if (name === 'my-appointments') loadAppointments();
-    if (name === 'feedback') loadFeedback();
-    if (name === 'dashboard') loadDashboard();
+// ── LOGIN ─────────────────────────────────────────────────────────────────────
+async function doLogin() {
+  clearAuthMessages();
+  const email    = document.getElementById('l-email').value.trim().toLowerCase();
+  const password = document.getElementById('l-password').value;
+  if (!email||!password) { showAuthError('Please enter your email and password.'); return; }
+
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true; btn.textContent = 'Signing in…';
+
+  if (DEMO) {
+    await new Promise(r => setTimeout(r, 600)); // simulate network
+    const u = DEMO_USERS[email];
+    if (!u || u.password !== password) {
+      showAuthError('Incorrect email or password. Try user@cafs.com / User1234!');
+      btn.disabled=false; btn.textContent='Sign In →'; return;
+    }
+    currentUser = { email, name: u.name, role: u.role };
+    authToken   = 'demo-jwt-token-' + Date.now();
+    localStorage.setItem('cafs_user',  JSON.stringify(currentUser));
+    localStorage.setItem('cafs_token', authToken);
+    enterApp();
+  } else {
+    const res = await api('POST', '/auth/login', { email, password });
+    if (!res || res.error) { showAuthError(res?.error || 'Login failed.'); btn.disabled=false; btn.textContent='Sign In →'; return; }
+    currentUser = res.user;
+    authToken   = res.idToken;
+    localStorage.setItem('cafs_user',  JSON.stringify(currentUser));
+    localStorage.setItem('cafs_token', authToken);
+    localStorage.setItem('cafs_refresh', res.refreshToken);
+    enterApp();
   }
+  btn.disabled=false; btn.textContent='Sign In →';
+}
 
-  // ── Toast ───────────────────────────────────────────────────────────────
-  function toast(msg, type = 'success') {
-    const el = document.getElementById('toast');
-    el.textContent = msg;
-    el.className = 'show ' + type;
-    setTimeout(() => el.className = '', 3000);
+// ── REGISTER ──────────────────────────────────────────────────────────────────
+async function doRegister() {
+  clearAuthMessages();
+  const name     = document.getElementById('r-name').value.trim();
+  const email    = document.getElementById('r-email').value.trim().toLowerCase();
+  const password = document.getElementById('r-password').value;
+  const role     = document.getElementById('r-role').value;
+  const invite   = document.getElementById('r-invite')?.value || '';
+
+  if (!name||!email||!password) { showAuthError('All fields are required.'); return; }
+  if (password.length < 8) { showAuthError('Password must be at least 8 characters.'); return; }
+  if (!/[A-Z]/.test(password)) { showAuthError('Password must contain an uppercase letter.'); return; }
+  if (!/[0-9]/.test(password)) { showAuthError('Password must contain a number.'); return; }
+  if (!/[^A-Za-z0-9]/.test(password)) { showAuthError('Password must contain a symbol (!@#$…).'); return; }
+  if (role==='ADMIN' && invite!=='CAFS-ADMIN-2026') { showAuthError('Invalid admin invite code.'); return; }
+
+  const btn = document.getElementById('register-btn');
+  btn.disabled=true; btn.textContent='Creating account…';
+
+  if (DEMO) {
+    await new Promise(r => setTimeout(r, 700));
+    if (DEMO_USERS[email]) { showAuthError('An account with this email already exists.'); btn.disabled=false; btn.textContent='Create Account →'; return; }
+    DEMO_USERS[email] = { password, name, role };
+    showAuthSuccess('Account created! You can now sign in.');
+    setTimeout(()=>switchAuthTab('login'), 1500);
+  } else {
+    const res = await api('POST', '/auth/register', { email, password, name, role, inviteCode: invite });
+    if (!res||res.error) { showAuthError(res?.error||'Registration failed.'); btn.disabled=false; btn.textContent='Create Account →'; return; }
+    showAuthSuccess('Account created! You can now sign in.');
+    setTimeout(()=>switchAuthTab('login'), 1500);
   }
+  btn.disabled=false; btn.textContent='Create Account →';
+}
 
-  // ── Service selection ───────────────────────────────────────────────────
-  function selectService(card) {
-    document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
-    card.classList.add('selected');
-    selectedService = card.dataset.service;
+// ── LOGOUT ────────────────────────────────────────────────────────────────────
+async function doLogout() {
+  if (!confirm('Are you sure you want to sign out?')) return;
+  if (!DEMO && authToken) {
+    await api('POST', '/auth/logout', null, authToken).catch(()=>{});
   }
+  currentUser = null; authToken = null;
+  localStorage.removeItem('cafs_user');
+  localStorage.removeItem('cafs_token');
+  localStorage.removeItem('cafs_refresh');
+  document.getElementById('app').classList.remove('show');
+  document.getElementById('auth-overlay').classList.remove('hidden');
+  clearAuthMessages();
+  switchAuthTab('login');
+  document.getElementById('l-email').value='';
+  document.getElementById('l-password').value='';
+  toast('Signed out successfully');
+}
 
-  // ── Star rating ─────────────────────────────────────────────────────────
-  function setRating(val) {
-    selectedRating = val;
-    document.querySelectorAll('.star').forEach(s => {
-      s.classList.toggle('lit', parseInt(s.dataset.v) <= val);
-    });
-  }
+// ── ENTER APP ─────────────────────────────────────────────────────────────────
+function enterApp() {
+  document.getElementById('auth-overlay').classList.add('hidden');
+  document.getElementById('app').classList.add('show');
+  // Update header
+  document.getElementById('user-avatar').textContent    = currentUser.name[0].toUpperCase();
+  document.getElementById('user-name-header').textContent = currentUser.name.split(' ')[0];
+  document.getElementById('role-badge-header').textContent = currentUser.role;
+  // Show/hide admin nav
+  const isAdmin = currentUser.role==='ADMIN';
+  document.getElementById('admin-nav-btn').style.display = isAdmin ? '' : 'none';
+  // Update appointments heading
+  document.getElementById('appts-heading').textContent = isAdmin ? 'All Appointments' : 'My Appointments';
+  loadDashboard();
+}
 
-  // ── API helper ──────────────────────────────────────────────────────────
-  async function api(method, path, body) {
+// ── Check for existing session on load ───────────────────────────────────────
+window.onload = function() {
+  const saved = localStorage.getItem('cafs_user');
+  const token = localStorage.getItem('cafs_token');
+  if (saved && token) {
     try {
-      const res = await fetch(API_BASE + path, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: body ? JSON.stringify(body) : undefined,
-      });
-      return await res.json();
-    } catch (e) {
-      return null;
-    }
+      currentUser = JSON.parse(saved);
+      authToken   = token;
+      enterApp();
+    } catch(e) { /* invalid session, show login */ }
   }
-
-  // ── BOOK APPOINTMENT ────────────────────────────────────────────────────
-  async function bookAppointment() {
-    const name    = document.getElementById('b-name').value.trim();
-    const email   = document.getElementById('b-email').value.trim();
-    const date    = document.getElementById('b-date').value;
-    const time    = document.getElementById('b-time').value;
-    const notes   = document.getElementById('b-notes').value.trim();
-
-    if (!name || !email || !date || !time || !selectedService) {
-      toast('Please fill in all required fields and select a service.', 'error');
-      return;
-    }
-
-    const btn = document.getElementById('book-btn');
-    btn.disabled = true;
-    btn.textContent = 'Booking…';
-
-    const appt = { name, email, service: selectedService, date, time, notes,
-                   status: 'PENDING', appointmentId: 'appt-' + Date.now(),
-                   createdAt: new Date().toISOString() };
-
-    if (DEMO) {
-      demoAppointments.push(appt);
-    } else {
-      const res = await api('POST', '/appointments', appt);
-      if (!res) { toast('Booking failed. Try again.', 'error'); btn.disabled=false; btn.textContent='✓ Confirm Booking'; return; }
-    }
-
-    toast(`✓ Booked ${selectedService} for ${date} at ${time}`);
-    clearBookingForm();
-    btn.disabled = false;
-    btn.textContent = '✓ Confirm Booking';
-    updateStats();
-  }
-
-  function clearBookingForm() {
-    ['b-name','b-email','b-date','b-time','b-notes'].forEach(id => document.getElementById(id).value = '');
-    document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
-    selectedService = '';
-  }
-
-  // ── LOAD APPOINTMENTS ───────────────────────────────────────────────────
-  async function loadAppointments() {
-    const statusFilter = document.getElementById('filter-status')?.value || '';
-    let items = DEMO ? [...demoAppointments] : ((await api('GET', '/appointments')) || {}).appointments || [];
-
-    if (statusFilter) items = items.filter(a => a.status === statusFilter);
-    items.sort((a,b) => (a.date + a.time) > (b.date + b.time) ? -1 : 1);
-
-    const list = document.getElementById('appt-list');
-    if (!items.length) {
-      list.innerHTML = '<div class="empty"><div class="icon">📅</div><p>No appointments found.</p></div>';
-      return;
-    }
-    list.innerHTML = items.map(appt => {
-      const d = new Date(appt.date);
-      const day = d.getDate() || appt.date.split('-')[2];
-      const mon = d.toLocaleString('default',{month:'short'}) || '';
-      return `
-        <div class="appt-item">
-          <div class="appt-date-badge">
-            <div class="day">${day}</div>
-            <div class="mon">${mon}</div>
-          </div>
-          <div class="appt-info">
-            <div class="appt-name">${appt.name}</div>
-            <div class="appt-meta">🕐 ${appt.time} · 🏢 ${appt.service}</div>
-            ${appt.notes ? `<div class="appt-meta" style="margin-top:3px;font-style:italic">"${appt.notes}"</div>` : ''}
-          </div>
-          <div class="appt-actions">
-            <span class="badge badge-${appt.status.toLowerCase()}">${appt.status}</span>
-            ${appt.status === 'PENDING' ? `<button class="btn btn-sm" style="background:var(--accent-light);color:var(--accent);border:none;" onclick="updateStatus('${appt.appointmentId}','CONFIRMED')">Confirm</button>` : ''}
-            ${appt.status !== 'CANCELLED' ? `<button class="btn btn-sm btn-danger" onclick="cancelAppt('${appt.appointmentId}')">Cancel</button>` : ''}
-          </div>
-        </div>`;
-    }).join('');
-  }
-
-  async function updateStatus(id, status) {
-    if (DEMO) {
-      const a = demoAppointments.find(x => x.appointmentId === id);
-      if (a) a.status = status;
-    } else {
-      await api('PUT', '/appointments/' + id, { status });
-    }
-    toast('Status updated to ' + status);
-    loadAppointments();
-    updateStats();
-  }
-
-  async function cancelAppt(id) {
-    if (!confirm('Cancel this appointment?')) return;
-    await updateStatus(id, 'CANCELLED');
-  }
-
-  // ── SUBMIT FEEDBACK ─────────────────────────────────────────────────────
-  async function submitFeedback() {
-    const message  = document.getElementById('f-message').value.trim();
-    const category = document.getElementById('f-category').value;
-    const name     = document.getElementById('f-name').value.trim();
-    const email    = document.getElementById('f-email').value.trim();
-
-    if (!message) { toast('Please enter your feedback message.', 'error'); return; }
-
-    const fb = {
-      feedbackId: 'fb-' + Date.now(),
-      category,
-      rating: selectedRating || null,
-      message,
-      submitter: name || 'Anonymous',
-      email,
-      anonymous: !name,
-      status: 'OPEN',
-      createdAt: new Date().toISOString(),
-    };
-
-    if (DEMO) {
-      demoFeedback.unshift(fb);
-    } else {
-      const res = await api('POST', '/feedback', fb);
-      if (!res) { toast('Submission failed.', 'error'); return; }
-    }
-
-    toast('Thank you for your feedback!');
-    document.getElementById('f-message').value = '';
-    document.getElementById('f-name').value = '';
-    document.getElementById('f-email').value = '';
-    selectedRating = 0;
-    document.querySelectorAll('.star').forEach(s => s.classList.remove('lit'));
-    loadFeedback();
-    updateStats();
-  }
-
-  // ── LOAD FEEDBACK ────────────────────────────────────────────────────────
-  async function loadFeedback() {
-    let items = DEMO ? [...demoFeedback] : ((await api('GET', '/feedback')) || {}).feedback || [];
-    const list = document.getElementById('feedback-list');
-    if (!items.length) {
-      list.innerHTML = '<div class="empty"><div class="icon">💬</div><p>No feedback yet.</p></div>';
-      return;
-    }
-    list.innerHTML = items.map(fb => `
-      <div class="feedback-item">
-        <div class="feedback-header">
-          <div>
-            <strong style="font-size:0.9rem;">${fb.submitter}</strong>
-            <div class="feedback-meta">${fb.category} · ${new Date(fb.createdAt).toLocaleDateString('en-GB')}</div>
-          </div>
-          <div>
-            ${fb.rating ? '<div class="rating-stars">' + '★'.repeat(fb.rating) + '☆'.repeat(5-fb.rating) + '</div>' : ''}
-            <span class="badge badge-${fb.status === 'OPEN' ? 'pending' : 'confirmed'}">${fb.status}</span>
-          </div>
-        </div>
-        <p style="font-size:0.88rem;color:var(--ink)">${fb.message}</p>
-      </div>`).join('');
-  }
-
-  // ── DASHBOARD ────────────────────────────────────────────────────────────
-  function updateStats() {
-    document.getElementById('stat-total').textContent    = demoAppointments.length;
-    document.getElementById('stat-pending').textContent  = demoAppointments.filter(a => a.status === 'PENDING').length;
-    document.getElementById('stat-feedback').textContent = demoFeedback.length;
-    const ratings = demoFeedback.filter(f => f.rating).map(f => f.rating);
-    document.getElementById('stat-rating').textContent   = ratings.length ? (ratings.reduce((a,b)=>a+b,0)/ratings.length).toFixed(1) + ' ★' : '—';
-  }
-
-  function loadDashboard() {
-    updateStats();
-    const upcoming = demoAppointments.filter(a => a.status !== 'CANCELLED').slice(0,3);
-    const dashUp = document.getElementById('dash-upcoming');
-    dashUp.innerHTML = upcoming.length ? upcoming.map(a => `
-      <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
-        <div style="background:var(--accent-light);color:var(--accent);border-radius:8px;padding:6px 10px;font-size:0.78rem;font-weight:600;white-space:nowrap;">${a.date}</div>
-        <div>
-          <div style="font-size:0.88rem;font-weight:600">${a.name}</div>
-          <div style="font-size:0.78rem;color:var(--muted)">${a.service} · ${a.time}</div>
-        </div>
-        <span class="badge badge-${a.status.toLowerCase()}" style="margin-left:auto">${a.status}</span>
-      </div>`).join('') : '<div class="empty" style="padding:1.5rem"><p>No upcoming appointments.</p></div>';
-
-    const recentFb = demoFeedback.slice(0,3);
-    const dashFb = document.getElementById('dash-feedback');
-    dashFb.innerHTML = recentFb.length ? recentFb.map(f => `
-      <div style="padding:10px 0;border-bottom:1px solid var(--border)">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:0.82rem;font-weight:600">${f.submitter}</span>
-          ${f.rating ? '<span style="color:#f4a800;font-size:0.82rem">' + '★'.repeat(f.rating) + '</span>' : ''}
-        </div>
-        <p style="font-size:0.82rem;color:var(--muted);margin-top:2px">${f.message.slice(0,80)}${f.message.length>80?'…':''}</p>
-      </div>`).join('') : '<div class="empty" style="padding:1.5rem"><p>No feedback yet.</p></div>';
-  }
-
-  // ── Seed some demo data for presentation ─────────────────────────────────
-  (function seedDemo() {
-    demoAppointments = [
-      { appointmentId:'appt-1', name:'Alice Johnson', email:'alice@example.com', service:'GP Consultation', date:'2026-05-07', time:'10:00', notes:'Follow-up', status:'CONFIRMED', createdAt: new Date().toISOString() },
-      { appointmentId:'appt-2', name:'Bob Okafor',    email:'bob@example.com',   service:'Library Booking', date:'2026-05-09', time:'14:30', notes:'',          status:'PENDING',   createdAt: new Date().toISOString() },
-      { appointmentId:'appt-3', name:'Clara Sheikh',  email:'c@example.com',     service:'Council Advice',  date:'2026-05-12', time:'11:00', notes:'Licensing query', status:'PENDING', createdAt: new Date().toISOString() },
-    ];
-    demoFeedback = [
-      { feedbackId:'fb-1', category:'STAFF',      rating:5, message:'The receptionist was incredibly helpful and made the whole process stress-free.', submitter:'Alice Johnson', anonymous:false, status:'OPEN', createdAt: new Date().toISOString() },
-      { feedbackId:'fb-2', category:'FACILITY',   rating:3, message:'The waiting area could use better seating. Otherwise the service was good.', submitter:'Anonymous', anonymous:true, status:'OPEN', createdAt: new Date().toISOString() },
-      { feedbackId:'fb-3', category:'SUGGESTION', rating:4, message:'Would love an SMS reminder 24 hours before appointments.', submitter:'Bob Okafor', anonymous:false, status:'REVIEWED', createdAt: new Date().toISOString() },
-    ];
-    loadDashboard();
-  })();
-
-  // Set min date for booking to today
   document.getElementById('b-date').min = new Date().toISOString().split('T')[0];
+  seedDemoData();
+};
+
+// ── API helper ────────────────────────────────────────────────────────────────
+async function api(method, path, body, token) {
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (token || authToken) headers['Authorization'] = 'Bearer ' + (token || authToken);
+    const res = await fetch(API_BASE+path, {
+      method, headers, body: body ? JSON.stringify(body) : undefined
+    });
+    return await res.json();
+  } catch(e) { return null; }
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+function showPanel(name, btn) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (name==='my-appointments') loadAppointments();
+  if (name==='feedback')        loadFeedback();
+  if (name==='dashboard')       loadDashboard();
+  if (name==='admin')           loadAdminAppointments();
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function toast(msg, type='success') {
+  const el = document.getElementById('toast');
+  el.textContent=msg; el.className='show '+type;
+  setTimeout(()=>el.className='', 3200);
+}
+
+// ── Service selection ─────────────────────────────────────────────────────────
+function selectService(card) {
+  document.querySelectorAll('.service-card').forEach(c=>c.classList.remove('selected'));
+  card.classList.add('selected'); selectedService=card.dataset.service;
+}
+
+// ── Star rating ───────────────────────────────────────────────────────────────
+function setRating(val) {
+  selectedRating=val;
+  document.querySelectorAll('.star').forEach(s=>s.classList.toggle('lit',parseInt(s.dataset.v)<=val));
+}
+
+// ── Anonymous toggle ──────────────────────────────────────────────────────────
+function toggleAnon(checked) { /* stored in checkbox state */ }
+
+// ── BOOK ──────────────────────────────────────────────────────────────────────
+async function bookAppointment() {
+  const date=document.getElementById('b-date').value;
+  const time=document.getElementById('b-time').value;
+  const notes=document.getElementById('b-notes').value.trim();
+  if (!selectedService||!date||!time) { toast('Please select a service, date and time.','error'); return; }
+
+  const btn=document.getElementById('book-btn'); btn.disabled=true; btn.textContent='Booking…';
+
+  const appt = {
+    name:          currentUser.name,
+    email:         currentUser.email,
+    userId:        currentUser.sub || currentUser.email,
+    service:       selectedService,
+    date, time, notes,
+    status:        'PENDING',
+    appointmentId: 'appt-'+Date.now(),
+    createdAt:     new Date().toISOString()
+  };
+
+  if (DEMO) demoAppointments.push(appt);
+  else { const r=await api('POST','/appointments',appt); if(!r){toast('Booking failed.','error');btn.disabled=false;btn.textContent='✓ Confirm Booking';return;} }
+
+  toast(`✓ Booked ${selectedService} for ${date} at ${time}`);
+  clearBookingForm(); btn.disabled=false; btn.textContent='✓ Confirm Booking';
+  updateStats();
+}
+
+function clearBookingForm() {
+  ['b-date','b-time','b-notes'].forEach(id=>document.getElementById(id).value='');
+  document.querySelectorAll('.service-card').forEach(c=>c.classList.remove('selected'));
+  selectedService='';
+}
+
+// ── LOAD APPOINTMENTS ─────────────────────────────────────────────────────────
+async function loadAppointments() {
+  const statusFilter = document.getElementById('filter-status')?.value||'';
+  const isAdmin = currentUser?.role==='ADMIN';
+  let items = DEMO ? [...demoAppointments] : ((await api('GET','/appointments'))||{}).appointments||[];
+
+  // USERs only see their own; ADMINs see all
+  if (!isAdmin) items = items.filter(a=>a.email===currentUser.email||a.userId===currentUser.email);
+  if (statusFilter) items = items.filter(a=>a.status===statusFilter);
+  items.sort((a,b)=>(a.date+a.time)>(b.date+b.time)?-1:1);
+
+  const list = document.getElementById('appt-list');
+  if (!items.length) { list.innerHTML='<div class="empty"><div class="icon">📅</div><p>No appointments found.</p></div>'; return; }
+  list.innerHTML = items.map(appt => {
+    const d   = new Date(appt.date+'T12:00:00');
+    const day = d.getDate()||appt.date.split('-')[2];
+    const mon = d.toLocaleString('default',{month:'short'})||'';
+    const isAdmin = currentUser.role==='ADMIN';
+    return `<div class="appt-item">
+      <div class="appt-date-badge"><div class="day">${day}</div><div class="mon">${mon}</div></div>
+      <div class="appt-info">
+        <div class="appt-name">${appt.name} ${isAdmin?'<span style="font-size:0.75rem;color:var(--muted)">— '+appt.email+'</span>':''}</div>
+        <div class="appt-meta">🕐 ${appt.time} · 🏢 ${appt.service}</div>
+        ${appt.notes?`<div class="appt-meta" style="font-style:italic">"${appt.notes}"</div>`:''}
+      </div>
+      <div class="appt-actions">
+        <span class="badge badge-${appt.status.toLowerCase()}">${appt.status}</span>
+        ${(isAdmin&&appt.status==='PENDING')?`<button class="btn btn-sm" style="background:var(--green-l);color:var(--green);border:none" onclick="updateStatus('${appt.appointmentId}','CONFIRMED')">Confirm</button>`:''}
+        ${(appt.status!=='CANCELLED'&&(isAdmin||appt.email===currentUser.email))?`<button class="btn btn-sm btn-danger" onclick="cancelAppt('${appt.appointmentId}')">Cancel</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function loadAdminAppointments() {
+  const items = DEMO ? [...demoAppointments] : ((await api('GET','/appointments'))||{}).appointments||[];
+  const list = document.getElementById('admin-appt-list');
+  if (!items.length) { list.innerHTML='<div class="empty"><p>No appointments.</p></div>'; return; }
+  list.innerHTML = items.slice(0,8).map(a=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.875rem">
+      <div><strong>${a.name}</strong><br><span style="color:var(--muted);font-size:0.78rem">${a.service} · ${a.date} ${a.time}</span></div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span class="badge badge-${a.status.toLowerCase()}">${a.status}</span>
+        ${a.status==='PENDING'?`<button class="btn btn-sm" style="background:var(--green-l);color:var(--green);border:none;padding:4px 10px;font-size:0.75rem" onclick="updateStatus('${a.appointmentId}','CONFIRMED')">✓</button>`:''}
+      </div>
+    </div>`).join('');
+}
+
+async function updateStatus(id, status) {
+  if (currentUser.role!=='ADMIN'&&status==='CONFIRMED') { toast('Only admins can confirm appointments.','error'); return; }
+  if (DEMO) { const a=demoAppointments.find(x=>x.appointmentId===id); if(a)a.status=status; }
+  else await api('PUT','/appointments/'+id,{status});
+  toast('Status updated to '+status);
+  loadAppointments(); loadAdminAppointments(); updateStats();
+}
+async function cancelAppt(id) {
+  if (!confirm('Cancel this appointment?')) return;
+  await updateStatus(id,'CANCELLED');
+}
+
+// ── FEEDBACK ──────────────────────────────────────────────────────────────────
+async function submitFeedback() {
+  const message  = document.getElementById('f-message').value.trim();
+  const category = document.getElementById('f-category').value;
+  const anon     = document.getElementById('f-anon').checked;
+  if (!message) { toast('Please enter your feedback.','error'); return; }
+
+  const fb = {
+    feedbackId:    'fb-'+Date.now(),
+    category, rating: selectedRating||null,
+    message,
+    submitter:     anon ? 'Anonymous' : currentUser.name,
+    email:         anon ? '' : currentUser.email,
+    userId:        anon ? '' : (currentUser.sub||currentUser.email),
+    anonymous:     anon,
+    status:        'OPEN',
+    createdAt:     new Date().toISOString()
+  };
+
+  if (DEMO) demoFeedback.unshift(fb);
+  else { const r=await api('POST','/feedback',fb); if(!r){toast('Submission failed.','error');return;} }
+
+  toast('Thank you for your feedback!');
+  document.getElementById('f-message').value='';
+  document.getElementById('f-anon').checked=false;
+  selectedRating=0;
+  document.querySelectorAll('.star').forEach(s=>s.classList.remove('lit'));
+  loadFeedback(); updateStats();
+}
+
+async function loadFeedback() {
+  const items = DEMO ? [...demoFeedback] : ((await api('GET','/feedback'))||{}).feedback||[];
+  const list = document.getElementById('feedback-list');
+  if (!items.length) { list.innerHTML='<div class="empty"><div class="icon">💬</div><p>No feedback yet.</p></div>'; return; }
+  const isAdmin = currentUser?.role==='ADMIN';
+  list.innerHTML = items.map(fb=>`
+    <div class="feedback-item">
+      <div class="feedback-header">
+        <div><strong style="font-size:0.9rem">${fb.submitter}</strong><div style="font-size:0.78rem;color:var(--muted)">${fb.category} · ${new Date(fb.createdAt).toLocaleDateString('en-GB')}</div></div>
+        <div>${fb.rating?'<div class="rating-stars">'+'★'.repeat(fb.rating)+'☆'.repeat(5-fb.rating)+'</div>':''}<span class="badge badge-${fb.status==='OPEN'?'pending':'confirmed'}">${fb.status}</span></div>
+      </div>
+      <p style="font-size:0.875rem">${fb.message}</p>
+      ${isAdmin?`<div style="margin-top:8px"><button class="btn btn-sm btn-danger" onclick="deleteFeedback('${fb.feedbackId}')">Remove</button></div>`:''}
+    </div>`).join('');
+}
+
+async function deleteFeedback(id) {
+  if (currentUser.role!=='ADMIN') { toast('Admin access required.','error'); return; }
+  if (!confirm('Remove this feedback?')) return;
+  if (DEMO) demoFeedback = demoFeedback.filter(f=>f.feedbackId!==id);
+  else await api('DELETE','/feedback/'+id);
+  toast('Feedback removed'); loadFeedback();
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────────
+function updateStats() {
+  const isAdmin = currentUser?.role==='ADMIN';
+  const myAppts = isAdmin ? demoAppointments : demoAppointments.filter(a=>a.email===currentUser.email);
+  document.getElementById('stat-total').textContent   = myAppts.length;
+  document.getElementById('stat-pending').textContent = myAppts.filter(a=>a.status==='PENDING').length;
+  document.getElementById('stat-feedback').textContent= demoFeedback.length;
+  const ratings = demoFeedback.filter(f=>f.rating).map(f=>f.rating);
+  document.getElementById('stat-rating').textContent  = ratings.length?(ratings.reduce((a,b)=>a+b,0)/ratings.length).toFixed(1)+' ★':'—';
+}
+
+function loadDashboard() {
+  updateStats();
+  const isAdmin = currentUser?.role==='ADMIN';
+  const appts   = (isAdmin?demoAppointments:demoAppointments.filter(a=>a.email===currentUser.email)).filter(a=>a.status!=='CANCELLED').slice(0,3);
+  document.getElementById('dash-upcoming').innerHTML = appts.length ? appts.map(a=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="background:var(--green-l);color:var(--green);border-radius:8px;padding:6px 10px;font-size:0.78rem;font-weight:600;white-space:nowrap">${a.date}</div>
+      <div><div style="font-size:0.875rem;font-weight:600">${a.name}</div><div style="font-size:0.78rem;color:var(--muted)">${a.service} · ${a.time}</div></div>
+      <span class="badge badge-${a.status.toLowerCase()}" style="margin-left:auto">${a.status}</span>
+    </div>`).join('') : '<div class="empty" style="padding:1.5rem"><p>No upcoming appointments.</p></div>';
+
+  document.getElementById('dash-feedback-list').innerHTML = demoFeedback.slice(0,3).map(f=>`
+    <div style="padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between"><span style="font-size:0.82rem;font-weight:600">${f.submitter}</span>${f.rating?'<span style="color:#f4a800;font-size:0.82rem">'+'★'.repeat(f.rating)+'</span>':''}</div>
+      <p style="font-size:0.82rem;color:var(--muted);margin-top:2px">${f.message.slice(0,80)}${f.message.length>80?'…':''}</p>
+    </div>`).join('') || '<div class="empty" style="padding:1.5rem"><p>No feedback yet.</p></div>';
+}
+
+function seedDemoData() {
+  demoAppointments = [
+    {appointmentId:'appt-1',name:'Alice Johnson',email:'user@cafs.com',service:'GP Consultation',date:'2026-05-07',time:'10:00',notes:'Follow-up',status:'CONFIRMED',createdAt:new Date().toISOString()},
+    {appointmentId:'appt-2',name:'Bob Okafor',email:'user@cafs.com',service:'Library Booking',date:'2026-05-09',time:'14:30',notes:'',status:'PENDING',createdAt:new Date().toISOString()},
+    {appointmentId:'appt-3',name:'Clara Sheikh',email:'clara@example.com',service:'Council Advice',date:'2026-05-12',time:'11:00',notes:'Licensing query',status:'PENDING',createdAt:new Date().toISOString()},
+  ];
+  demoFeedback = [
+    {feedbackId:'fb-1',category:'STAFF',rating:5,message:'The receptionist was incredibly helpful.',submitter:'Alice Johnson',email:'user@cafs.com',anonymous:false,status:'OPEN',createdAt:new Date().toISOString()},
+    {feedbackId:'fb-2',category:'FACILITY',rating:3,message:'The waiting area could use better seating.',submitter:'Anonymous',email:'',anonymous:true,status:'OPEN',createdAt:new Date().toISOString()},
+    {feedbackId:'fb-3',category:'SUGGESTION',rating:4,message:'Would love an SMS reminder 24 hours before appointments.',submitter:'Bob Okafor',email:'user@cafs.com',anonymous:false,status:'REVIEWED',createdAt:new Date().toISOString()},
+  ];
+}
 </script>
 </body>
 </html>
