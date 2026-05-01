@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CAFS – Community Appointment & Feedback System</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ── Design tokens ── */
+  :root {
+    --ink: #0f1923;
+    --paper: #f5f2ed;
+    --cream: #ede9e2;
+    --accent: #1a6b4a;
+    --accent-light: #e8f3ee;
+    --accent-mid: #2d9e70;
+    --warm: #c05c2a;
+    --warm-light: #fdf0e8;
+    --border: #d4cfc7;
+    --muted: #7a7369;
+    --white: #ffffff;
+    --shadow: 0 2px 16px rgba(15,25,35,0.08);
+    --shadow-lg: 0 8px 40px rgba(15,25,35,0.14);
+    --r: 12px;
+    --r-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  }
+  .logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.4rem;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-dot {
+    width: 10px; height: 10px;
+    background: var(--accent-mid);
+    border-radius: 50%;
+    display: inline-block;
+  }
+  nav { display: flex; gap: 4px; }
+  nav button {
+    background: none;
+    border: none;
+    color: rgba(245,242,237,0.65);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all .2s;
+    letter-spacing: 0.01em;
+  }
+  nav button:hover { color: var(--paper); background: rgba(255,255,255,0.08); }
+  nav button.active { background: var(--accent); color: var(--white); }
+
+  /* ── Main layout ── */
+  main { max-width: 960px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+
+  /* ── Hero ── */
+  .hero {
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 20px;
+    padding: 3rem;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    right: -60px; top: -60px;
+    width: 280px; height: 280px;
+    background: radial-gradient(circle, rgba(45,158,112,0.3) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.4rem;
+    line-height: 1.15;
+    margin-bottom: 0.75rem;
+    position: relative;
+  }
+  .hero h1 em { font-style: italic; color: var(--accent-mid); }
+  .hero p {
+    color: rgba(245,242,237,0.7);
+    max-width: 520px;
+    font-size: 1rem;
+    position: relative;
+  }
+  .stats-row {
+    display: flex; gap: 2rem; margin-top: 2rem;
+    position: relative;
+  }
+  .stat { }
+  .stat strong {
+    display: block;
+    font-size: 1.8rem;
+    font-family: 'DM Serif Display', serif;
+    color: var(--accent-mid);
+  }
+  .stat span { font-size: 0.8rem; color: rgba(245,242,237,0.55); text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* ── Tabs ── */
+  .tabs { display: flex; gap: 8px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .tab {
+    padding: 8px 20px;
+    border-radius: 100px;
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .tab:hover { border-color: var(--accent); color: var(--accent); }
+  .tab.active { background: var(--accent); border-color: var(--accent); color: var(--white); }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--white);
+    border-radius: var(--r);
+    border: 1px solid var(--border);
+    padding: 1.75rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow);
+  }
+  .card-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.2rem;
+    margin-bottom: 1.25rem;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .icon-green { background: var(--accent-light); }
+  .icon-warm { background: var(--warm-light); }
+
+  /* ── Forms ── */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .form-full { grid-column: 1/-1; }
+  label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  input, select, textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--r-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    background: var(--paper);
+    color: var(--ink);
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(26,107,74,0.12);
+    background: var(--white);
+  }
+  textarea { resize: vertical; min-height: 90px; }
+
+  /* ── Buttons ── */
+  .btn {
+    padding: 11px 24px;
+    border-radius: var(--r-sm);
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: var(--white);
+  }
+  .btn-primary:hover { background: #155c3f; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(26,107,74,0.3); }
+  .btn-secondary {
+    background: var(--cream);
+    color: var(--ink);
+    border: 1.5px solid var(--border);
+  }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-danger { background: #dc3545; color: white; }
+  .btn-danger:hover { background: #c82333; }
+  .btn-sm { padding: 6px 14px; font-size: 0.8rem; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+  /* ── Appointment list ── */
+  .appt-list { display: flex; flex-direction: column; gap: 12px; }
+  .appt-item {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: box-shadow .2s;
+  }
+  .appt-item:hover { box-shadow: var(--shadow); }
+  .appt-date-badge {
+    background: var(--accent-light);
+    color: var(--accent);
+    border-radius: 10px;
+    padding: 8px 14px;
+    text-align: center;
+    min-width: 70px;
+    flex-shrink: 0;
+  }
+  .appt-date-badge .day { font-size: 1.4rem; font-family: 'DM Serif Display', serif; line-height: 1; }
+  .appt-date-badge .mon { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .appt-info { flex: 1; }
+  .appt-name { font-weight: 600; margin-bottom: 2px; }
+  .appt-meta { font-size: 0.82rem; color: var(--muted); }
+  .appt-actions { display: flex; gap: 6px; }
+
+  /* ── Status badges ── */
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .badge-pending { background: #fff3cd; color: #856404; }
+  .badge-confirmed { background: var(--accent-light); color: var(--accent); }
+  .badge-cancelled { background: #f8d7da; color: #842029; }
+
+  /* ── Star rating ── */
+  .star-rating { display: flex; gap: 6px; margin-top: 4px; }
+  .star {
+    font-size: 1.6rem;
+    cursor: pointer;
+    color: var(--border);
+    transition: color .15s, transform .1s;
+    user-select: none;
+  }
+  .star.lit { color: #f4a800; }
+  .star:hover { transform: scale(1.2); }
+
+  /* ── Feedback list ── */
+  .feedback-item {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 10px;
+  }
+  .feedback-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 8px;
+  }
+  .feedback-meta { font-size: 0.8rem; color: var(--muted); }
+  .rating-stars { color: #f4a800; font-size: 0.9rem; letter-spacing: 1px; }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed;
+    bottom: 2rem; right: 2rem;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 14px 20px;
+    border-radius: var(--r-sm);
+    font-size: 0.875rem;
+    font-weight: 500;
+    box-shadow: var(--shadow-lg);
+    transform: translateY(20px);
+    opacity: 0;
+    transition: all .3s;
+    z-index: 9999;
+    max-width: 320px;
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+  #toast.success { border-left: 4px solid var(--accent-mid); }
+  #toast.error { border-left: 4px solid var(--warm); }
+
+  /* ── Empty state ── */
+  .empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--muted);
+  }
+  .empty .icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+  .empty p { font-size: 0.9rem; }
+
+  /* ── Section panels ── */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ── Service select visual ── */
+  .service-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1rem; }
+  .service-card {
+    border: 2px solid var(--border);
+    border-radius: var(--r);
+    padding: 14px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+    background: var(--white);
+  }
+  .service-card:hover { border-color: var(--accent); background: var(--accent-light); }
+  .service-card.selected { border-color: var(--accent); background: var(--accent-light); }
+  .service-card .svc-icon { font-size: 1.5rem; margin-bottom: 4px; }
+  .service-card .svc-name { font-size: 0.78rem; font-weight: 600; color: var(--ink); }
+
+  @media (max-width: 640px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .service-grid { grid-template-columns: repeat(2, 1fr); }
+    .hero h1 { font-size: 1.8rem; }
+    .hero { padding: 2rem; }
+    .stats-row { gap: 1.2rem; }
+    header { padding: 0 1rem; }
+    .logo { font-size: 1.1rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span class="logo-dot"></span>
+    CAFS
+  </div>
+  <nav>
+    <button class="active" onclick="showPanel('dashboard')">Dashboard</button>
+    <button onclick="showPanel('book')">Book</button>
+    <button onclick="showPanel('my-appointments')">My Appointments</button>
+    <button onclick="showPanel('feedback')">Feedback</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- DASHBOARD -->
+  <div class="panel active" id="panel-dashboard">
+    <div class="hero">
+      <h1>Your community,<br><em>better connected.</em></h1>
+      <p>Book appointments with local services and share feedback to help improve your community experience.</p>
+      <div class="stats-row">
+        <div class="stat">
+          <strong id="stat-total">—</strong>
+          <span>Total Bookings</span>
+        </div>
+        <div class="stat">
+          <strong id="stat-pending">—</strong>
+          <span>Pending</span>
+        </div>
+        <div class="stat">
+          <strong id="stat-feedback">—</strong>
+          <span>Feedback Received</span>
+        </div>
+        <div class="stat">
+          <strong id="stat-rating">—</strong>
+          <span>Avg. Rating</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;" class="dash-grid">
+      <div class="card">
+        <div class="card-title">
+          <div class="card-icon icon-green">📅</div>
+          Upcoming Appointments
+        </div>
+        <div id="dash-upcoming"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">
+          <div class="card-icon icon-warm">💬</div>
+          Recent Feedback
+        </div>
+        <div id="dash-feedback"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOOK APPOINTMENT -->
+  <div class="panel" id="panel-book">
+    <div class="card">
+      <div class="card-title">
+        <div class="card-icon icon-green">📅</div>
+        Book an Appointment
+      </div>
+
+      <div class="form-grid">
+        <div class="form-full">
+          <label>Select a Service</label>
+          <div class="service-grid" id="service-grid">
+            <div class="service-card" data-service="GP Consultation" onclick="selectService(this)">
+              <div class="svc-icon">🩺</div>
+              <div class="svc-name">GP Consultation</div>
+            </div>
+            <div class="service-card" data-service="Library Booking" onclick="selectService(this)">
+              <div class="svc-icon">📚</div>
+              <div class="svc-name">Library Booking</div>
+            </div>
+            <div class="service-card" data-service="Council Advice" onclick="selectService(this)">
+              <div class="svc-icon">🏛️</div>
+              <div class="svc-name">Council Advice</div>
+            </div>
+            <div class="service-card" data-service="Housing Support" onclick="selectService(this)">
+              <div class="svc-icon">🏠</div>
+              <div class="svc-name">Housing Support</div>
+            </div>
+            <div class="service-card" data-service="Job Centre" onclick="selectService(this)">
+              <div class="svc-icon">💼</div>
+              <div class="svc-name">Job Centre</div>
+            </div>
+            <div class="service-card" data-service="Community Hub" onclick="selectService(this)">
+              <div class="svc-icon">🤝</div>
+              <div class="svc-name">Community Hub</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label for="b-name">Full Name</label>
+          <input id="b-name" type="text" placeholder="e.g. Jane Smith">
+        </div>
+        <div>
+          <label for="b-email">Email</label>
+          <input id="b-email" type="email" placeholder="jane@example.com">
+        </div>
+        <div>
+          <label for="b-date">Preferred Date</label>
+          <input id="b-date" type="date">
+        </div>
+        <div>
+          <label for="b-time">Preferred Time</label>
+          <select id="b-time">
+            <option value="">Select time…</option>
+            <option>09:00</option><option>09:30</option>
+            <option>10:00</option><option>10:30</option>
+            <option>11:00</option><option>11:30</option>
+            <option>13:00</option><option>13:30</option>
+            <option>14:00</option><option>14:30</option>
+            <option>15:00</option><option>15:30</option>
+            <option>16:00</option>
+          </select>
+        </div>
+        <div class="form-full">
+          <label for="b-notes">Additional Notes (optional)</label>
+          <textarea id="b-notes" placeholder="Any details the service provider should know…"></textarea>
+        </div>
+      </div>
+
+      <div style="margin-top:1.25rem; display:flex; gap:10px;">
+        <button class="btn btn-primary" id="book-btn" onclick="bookAppointment()">
+          ✓ Confirm Booking
+        </button>
+        <button class="btn btn-secondary" onclick="clearBookingForm()">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MY APPOINTMENTS -->
+  <div class="panel" id="panel-my-appointments">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:10px;">
+      <h2 style="font-family:'DM Serif Display',serif;font-size:1.5rem;">All Appointments</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <select id="filter-status" onchange="loadAppointments()" style="width:auto;padding:8px 14px;font-size:0.85rem;">
+          <option value="">All Statuses</option>
+          <option value="PENDING">Pending</option>
+          <option value="CONFIRMED">Confirmed</option>
+          <option value="CANCELLED">Cancelled</option>
+        </select>
+        <button class="btn btn-secondary btn-sm" onclick="loadAppointments()">↻ Refresh</button>
+      </div>
+    </div>
+    <div class="appt-list" id="appt-list">
+      <div class="empty"><div class="icon">📅</div><p>No appointments yet.</p></div>
+    </div>
+  </div>
+
+  <!-- FEEDBACK -->
+  <div class="panel" id="panel-feedback">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start;">
+      <div class="card">
+        <div class="card-title">
+          <div class="card-icon icon-warm">✍️</div>
+          Submit Feedback
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label>Category</label>
+          <select id="f-category">
+            <option value="GENERAL">General</option>
+            <option value="FACILITY">Facility</option>
+            <option value="STAFF">Staff</option>
+            <option value="APPOINTMENT">Appointment</option>
+            <option value="SUGGESTION">Suggestion</option>
+          </select>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label>Your Name (leave blank to submit anonymously)</label>
+          <input id="f-name" type="text" placeholder="Optional">
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label>Email (optional)</label>
+          <input id="f-email" type="email" placeholder="Optional">
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label>Rating</label>
+          <div class="star-rating" id="star-rating">
+            <span class="star" data-v="1" onclick="setRating(1)">★</span>
+            <span class="star" data-v="2" onclick="setRating(2)">★</span>
+            <span class="star" data-v="3" onclick="setRating(3)">★</span>
+            <span class="star" data-v="4" onclick="setRating(4)">★</span>
+            <span class="star" data-v="5" onclick="setRating(5)">★</span>
+          </div>
+        </div>
+        <div style="margin-bottom:1.25rem;">
+          <label>Your Feedback *</label>
+          <textarea id="f-message" placeholder="Tell us about your experience…"></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="submitFeedback()">Submit Feedback →</button>
+      </div>
+
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+          <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;">Community Feedback</h3>
+          <button class="btn btn-secondary btn-sm" onclick="loadFeedback()">↻</button>
+        </div>
+        <div id="feedback-list">
+          <div class="empty"><div class="icon">💬</div><p>No feedback yet.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<div id="toast"></div>
+
+<script>
+  // ── API Configuration ──────────────────────────────────────────────────
+  // Replace with your deployed API Gateway URL after CloudFormation deploy
+  const API_BASE = 'https://sz2518aw2e.execute-api.eu-west-1.amazonaws.com/prod';
+
+  // ── In-memory demo store (replaces API calls in demo mode) ─────────────
+  const DEMO = true;  // Set to false when backend is deployed
+  let demoAppointments = [];
+  let demoFeedback = [];
+  let selectedService = '';
+  let selectedRating = 0;
+
+  // ── Navigation ──────────────────────────────────────────────────────────
+  function showPanel(name) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('active');
+    event.target.classList.add('active');
+
+    if (name === 'my-appointments') loadAppointments();
+    if (name === 'feedback') loadFeedback();
+    if (name === 'dashboard') loadDashboard();
+  }
+
+  // ── Toast ───────────────────────────────────────────────────────────────
+  function toast(msg, type = 'success') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'show ' + type;
+    setTimeout(() => el.className = '', 3000);
+  }
+
+  // ── Service selection ───────────────────────────────────────────────────
+  function selectService(card) {
+    document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    selectedService = card.dataset.service;
+  }
+
+  // ── Star rating ─────────────────────────────────────────────────────────
+  function setRating(val) {
+    selectedRating = val;
+    document.querySelectorAll('.star').forEach(s => {
+      s.classList.toggle('lit', parseInt(s.dataset.v) <= val);
+    });
+  }
+
+  // ── API helper ──────────────────────────────────────────────────────────
+  async function api(method, path, body) {
+    try {
+      const res = await fetch(API_BASE + path, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      return await res.json();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // ── BOOK APPOINTMENT ────────────────────────────────────────────────────
+  async function bookAppointment() {
+    const name    = document.getElementById('b-name').value.trim();
+    const email   = document.getElementById('b-email').value.trim();
+    const date    = document.getElementById('b-date').value;
+    const time    = document.getElementById('b-time').value;
+    const notes   = document.getElementById('b-notes').value.trim();
+
+    if (!name || !email || !date || !time || !selectedService) {
+      toast('Please fill in all required fields and select a service.', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('book-btn');
+    btn.disabled = true;
+    btn.textContent = 'Booking…';
+
+    const appt = { name, email, service: selectedService, date, time, notes,
+                   status: 'PENDING', appointmentId: 'appt-' + Date.now(),
+                   createdAt: new Date().toISOString() };
+
+    if (DEMO) {
+      demoAppointments.push(appt);
+    } else {
+      const res = await api('POST', '/appointments', appt);
+      if (!res) { toast('Booking failed. Try again.', 'error'); btn.disabled=false; btn.textContent='✓ Confirm Booking'; return; }
+    }
+
+    toast(`✓ Booked ${selectedService} for ${date} at ${time}`);
+    clearBookingForm();
+    btn.disabled = false;
+    btn.textContent = '✓ Confirm Booking';
+    updateStats();
+  }
+
+  function clearBookingForm() {
+    ['b-name','b-email','b-date','b-time','b-notes'].forEach(id => document.getElementById(id).value = '');
+    document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+    selectedService = '';
+  }
+
+  // ── LOAD APPOINTMENTS ───────────────────────────────────────────────────
+  async function loadAppointments() {
+    const statusFilter = document.getElementById('filter-status')?.value || '';
+    let items = DEMO ? [...demoAppointments] : ((await api('GET', '/appointments')) || {}).appointments || [];
+
+    if (statusFilter) items = items.filter(a => a.status === statusFilter);
+    items.sort((a,b) => (a.date + a.time) > (b.date + b.time) ? -1 : 1);
+
+    const list = document.getElementById('appt-list');
+    if (!items.length) {
+      list.innerHTML = '<div class="empty"><div class="icon">📅</div><p>No appointments found.</p></div>';
+      return;
+    }
+    list.innerHTML = items.map(appt => {
+      const d = new Date(appt.date);
+      const day = d.getDate() || appt.date.split('-')[2];
+      const mon = d.toLocaleString('default',{month:'short'}) || '';
+      return `
+        <div class="appt-item">
+          <div class="appt-date-badge">
+            <div class="day">${day}</div>
+            <div class="mon">${mon}</div>
+          </div>
+          <div class="appt-info">
+            <div class="appt-name">${appt.name}</div>
+            <div class="appt-meta">🕐 ${appt.time} · 🏢 ${appt.service}</div>
+            ${appt.notes ? `<div class="appt-meta" style="margin-top:3px;font-style:italic">"${appt.notes}"</div>` : ''}
+          </div>
+          <div class="appt-actions">
+            <span class="badge badge-${appt.status.toLowerCase()}">${appt.status}</span>
+            ${appt.status === 'PENDING' ? `<button class="btn btn-sm" style="background:var(--accent-light);color:var(--accent);border:none;" onclick="updateStatus('${appt.appointmentId}','CONFIRMED')">Confirm</button>` : ''}
+            ${appt.status !== 'CANCELLED' ? `<button class="btn btn-sm btn-danger" onclick="cancelAppt('${appt.appointmentId}')">Cancel</button>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  async function updateStatus(id, status) {
+    if (DEMO) {
+      const a = demoAppointments.find(x => x.appointmentId === id);
+      if (a) a.status = status;
+    } else {
+      await api('PUT', '/appointments/' + id, { status });
+    }
+    toast('Status updated to ' + status);
+    loadAppointments();
+    updateStats();
+  }
+
+  async function cancelAppt(id) {
+    if (!confirm('Cancel this appointment?')) return;
+    await updateStatus(id, 'CANCELLED');
+  }
+
+  // ── SUBMIT FEEDBACK ─────────────────────────────────────────────────────
+  async function submitFeedback() {
+    const message  = document.getElementById('f-message').value.trim();
+    const category = document.getElementById('f-category').value;
+    const name     = document.getElementById('f-name').value.trim();
+    const email    = document.getElementById('f-email').value.trim();
+
+    if (!message) { toast('Please enter your feedback message.', 'error'); return; }
+
+    const fb = {
+      feedbackId: 'fb-' + Date.now(),
+      category,
+      rating: selectedRating || null,
+      message,
+      submitter: name || 'Anonymous',
+      email,
+      anonymous: !name,
+      status: 'OPEN',
+      createdAt: new Date().toISOString(),
+    };
+
+    if (DEMO) {
+      demoFeedback.unshift(fb);
+    } else {
+      const res = await api('POST', '/feedback', fb);
+      if (!res) { toast('Submission failed.', 'error'); return; }
+    }
+
+    toast('Thank you for your feedback!');
+    document.getElementById('f-message').value = '';
+    document.getElementById('f-name').value = '';
+    document.getElementById('f-email').value = '';
+    selectedRating = 0;
+    document.querySelectorAll('.star').forEach(s => s.classList.remove('lit'));
+    loadFeedback();
+    updateStats();
+  }
+
+  // ── LOAD FEEDBACK ────────────────────────────────────────────────────────
+  async function loadFeedback() {
+    let items = DEMO ? [...demoFeedback] : ((await api('GET', '/feedback')) || {}).feedback || [];
+    const list = document.getElementById('feedback-list');
+    if (!items.length) {
+      list.innerHTML = '<div class="empty"><div class="icon">💬</div><p>No feedback yet.</p></div>';
+      return;
+    }
+    list.innerHTML = items.map(fb => `
+      <div class="feedback-item">
+        <div class="feedback-header">
+          <div>
+            <strong style="font-size:0.9rem;">${fb.submitter}</strong>
+            <div class="feedback-meta">${fb.category} · ${new Date(fb.createdAt).toLocaleDateString('en-GB')}</div>
+          </div>
+          <div>
+            ${fb.rating ? '<div class="rating-stars">' + '★'.repeat(fb.rating) + '☆'.repeat(5-fb.rating) + '</div>' : ''}
+            <span class="badge badge-${fb.status === 'OPEN' ? 'pending' : 'confirmed'}">${fb.status}</span>
+          </div>
+        </div>
+        <p style="font-size:0.88rem;color:var(--ink)">${fb.message}</p>
+      </div>`).join('');
+  }
+
+  // ── DASHBOARD ────────────────────────────────────────────────────────────
+  function updateStats() {
+    document.getElementById('stat-total').textContent    = demoAppointments.length;
+    document.getElementById('stat-pending').textContent  = demoAppointments.filter(a => a.status === 'PENDING').length;
+    document.getElementById('stat-feedback').textContent = demoFeedback.length;
+    const ratings = demoFeedback.filter(f => f.rating).map(f => f.rating);
+    document.getElementById('stat-rating').textContent   = ratings.length ? (ratings.reduce((a,b)=>a+b,0)/ratings.length).toFixed(1) + ' ★' : '—';
+  }
+
+  function loadDashboard() {
+    updateStats();
+    const upcoming = demoAppointments.filter(a => a.status !== 'CANCELLED').slice(0,3);
+    const dashUp = document.getElementById('dash-upcoming');
+    dashUp.innerHTML = upcoming.length ? upcoming.map(a => `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+        <div style="background:var(--accent-light);color:var(--accent);border-radius:8px;padding:6px 10px;font-size:0.78rem;font-weight:600;white-space:nowrap;">${a.date}</div>
+        <div>
+          <div style="font-size:0.88rem;font-weight:600">${a.name}</div>
+          <div style="font-size:0.78rem;color:var(--muted)">${a.service} · ${a.time}</div>
+        </div>
+        <span class="badge badge-${a.status.toLowerCase()}" style="margin-left:auto">${a.status}</span>
+      </div>`).join('') : '<div class="empty" style="padding:1.5rem"><p>No upcoming appointments.</p></div>';
+
+    const recentFb = demoFeedback.slice(0,3);
+    const dashFb = document.getElementById('dash-feedback');
+    dashFb.innerHTML = recentFb.length ? recentFb.map(f => `
+      <div style="padding:10px 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:0.82rem;font-weight:600">${f.submitter}</span>
+          ${f.rating ? '<span style="color:#f4a800;font-size:0.82rem">' + '★'.repeat(f.rating) + '</span>' : ''}
+        </div>
+        <p style="font-size:0.82rem;color:var(--muted);margin-top:2px">${f.message.slice(0,80)}${f.message.length>80?'…':''}</p>
+      </div>`).join('') : '<div class="empty" style="padding:1.5rem"><p>No feedback yet.</p></div>';
+  }
+
+  // ── Seed some demo data for presentation ─────────────────────────────────
+  (function seedDemo() {
+    demoAppointments = [
+      { appointmentId:'appt-1', name:'Alice Johnson', email:'alice@example.com', service:'GP Consultation', date:'2026-05-07', time:'10:00', notes:'Follow-up', status:'CONFIRMED', createdAt: new Date().toISOString() },
+      { appointmentId:'appt-2', name:'Bob Okafor',    email:'bob@example.com',   service:'Library Booking', date:'2026-05-09', time:'14:30', notes:'',          status:'PENDING',   createdAt: new Date().toISOString() },
+      { appointmentId:'appt-3', name:'Clara Sheikh',  email:'c@example.com',     service:'Council Advice',  date:'2026-05-12', time:'11:00', notes:'Licensing query', status:'PENDING', createdAt: new Date().toISOString() },
+    ];
+    demoFeedback = [
+      { feedbackId:'fb-1', category:'STAFF',      rating:5, message:'The receptionist was incredibly helpful and made the whole process stress-free.', submitter:'Alice Johnson', anonymous:false, status:'OPEN', createdAt: new Date().toISOString() },
+      { feedbackId:'fb-2', category:'FACILITY',   rating:3, message:'The waiting area could use better seating. Otherwise the service was good.', submitter:'Anonymous', anonymous:true, status:'OPEN', createdAt: new Date().toISOString() },
+      { feedbackId:'fb-3', category:'SUGGESTION', rating:4, message:'Would love an SMS reminder 24 hours before appointments.', submitter:'Bob Okafor', anonymous:false, status:'REVIEWED', createdAt: new Date().toISOString() },
+    ];
+    loadDashboard();
+  })();
+
+  // Set min date for booking to today
+  document.getElementById('b-date').min = new Date().toISOString().split('T')[0];
+</script>
+</body>
+</html>
